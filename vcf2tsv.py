@@ -2,13 +2,15 @@ import csv
 import argparse
 import os
 import gzip
+import json
 
 # create the parser
-parser = argparse.ArgumentParser(description='Convert VCF file to TSV and retain the specified INFO fields')
+parser = argparse.ArgumentParser(description='Convert VCF file to TSV, JSON and retain the specified INFO fields')
 # add the argument
 parser.add_argument('--info', nargs='*', help='The INFO fields to be retained')
 parser.add_argument('--all', action='store_true', help='Retain all the INFO fields')
 parser.add_argument('--gz', action='store_true', help='Output the file as .tsv.gz')
+parser.add_argument('--json', action='store_true', help='Output the file as json')
 parser.add_argument('input_file', help='The input VCF file')
 args = parser.parse_args()
 
@@ -39,25 +41,35 @@ file_name, file_extension = os.path.splitext(args.input_file)
 if file_extension == '.gz':
     file_name, file_extension = os.path.splitext(file_name)
 
-# Open the output .tsv file
-if args.gz:
-    try:
-        tsv_file = gzip.open(file_name + '.tsv.gz', "wt")
-    except OSError as e:
-        raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
-else:
-    try:
-        tsv_file = open(file_name + '.tsv', "w")
-    except OSError as e:
-        raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
+# Open the output
+    file_name, file_extension = os.path.splitext(file_name)
 
-# Create a CSV writer
-tsv_writer = csv.writer(tsv_file, delimiter='\t')
-header = ["#CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO"]
+# Open the output file
+if args.json:
+    json_file_name = file_name + '.json'
+    try:
+        output_file = open(json_file_name, 'w')
+    except OSError as e:
+        raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
+    json_data = []
+else:
+    if args.gz:
+        try:
+            output_file = gzip.open(file_name + '.tsv.gz', "wt")
+        except OSError as e:
+            raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
+    else:
+        try:
+            output_file = open(file_name + '.tsv', "w")
+        except OSError as e:
+            raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
+    # Create a CSV writer
+    tsv_writer = csv.writer(output_file, delimiter='\t')
+header = ["CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO"]
 if args.info or args.all:
     all_info_fields = set()
     for line in lines:
-        # Skip lines that start
+        # Skip lines that start with '##'
         if line.startswith("##"):
             continue
         fields = line.strip().split("\t")
@@ -69,7 +81,10 @@ if args.info or args.all:
                 for info in args.info:
                     if info in info_fields:
                         header.append(info)
-            tsv_writer.writerow(header)
+            if args.json:
+                json_data.append(header)
+            else:
+                tsv_writer.writerow(header)
         else:
             if args.all:
                 for i,info in enumerate(info_fields):
@@ -78,7 +93,12 @@ if args.info or args.all:
                 for info in args.info:
                     if info in info_fields:
                         fields.append(fields[7].split(":")[info_fields.index(info)])
-            tsv_writer.writerow(fields)
-
-# close the output file
-tsv_file.close()
+            if args.json:
+                json_data.append(dict(zip(header, fields)))
+            else:
+                tsv_writer.writerow(fields)
+if args.json:
+    json.dump(json_data, output_file, indent=4)
+    output_file.close()
+else:
+    output_file.close()
