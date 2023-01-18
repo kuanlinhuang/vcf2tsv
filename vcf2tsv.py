@@ -12,11 +12,24 @@ parser.add_argument('--gz', action='store_true', help='Output the file as .tsv.g
 parser.add_argument('input_file', help='The input VCF file')
 args = parser.parse_args()
 
+#validate the input file
+if not args.input_file.endswith('.vcf') and not args.input_file.endswith('.vcf.gz'):
+    raise ValueError("Invalid input file. Please provide a valid .vcf or .vcf.gz file")
+
+if not os.path.isfile(args.input_file):
+    raise FileNotFoundError("Input file not found")
+
 # Open the input .vcf file
 if args.input_file.endswith('.gz'):
-    vcf_file = gzip.open(args.input_file, 'rt')
+    try:
+        vcf_file = gzip.open(args.input_file, 'rt')
+    except OSError as e:
+        raise ValueError("Invalid input file. Please provide a valid .vcf.gz file") from e
 else:
-    vcf_file = open(args.input_file, "r")
+    try:
+        vcf_file = open(args.input_file, "r")
+    except OSError as e:
+        raise ValueError("Invalid input file. Please provide a valid .vcf file") from e
 
 lines = vcf_file.readlines()
 vcf_file.close()
@@ -28,9 +41,15 @@ if file_extension == '.gz':
 
 # Open the output .tsv file
 if args.gz:
-    tsv_file = gzip.open(file_name + '.tsv.gz', "wt")
+    try:
+        tsv_file = gzip.open(file_name + '.tsv.gz', "wt")
+    except OSError as e:
+        raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
 else:
-    tsv_file = open(file_name + '.tsv', "w")
+    try:
+        tsv_file = open(file_name + '.tsv', "w")
+    except OSError as e:
+        raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
 
 # Create a CSV writer
 tsv_writer = csv.writer(tsv_file, delimiter='\t')
