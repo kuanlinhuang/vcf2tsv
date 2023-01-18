@@ -74,13 +74,16 @@ if args.info or args.all:
             continue
         fields = line.strip().split("\t")
         if line.startswith("#CHROM"):
-            info_fields = fields[7].split(":")
+            info_fields = fields[7]
             if args.all:
                 header.extend(info_fields)
             else:
                 for info in args.info:
                     if info in info_fields:
                         header.append(info)
+            format_fields = fields[8:]
+            header.extend(format_fields)
+            
             if args.json:
                 json_data.append(header)
             else:
@@ -88,11 +91,11 @@ if args.info or args.all:
         else:
             if args.all:
                 for i,info in enumerate(info_fields):
-                    fields.append(fields[7].split(":")[i])
+                    fields.append(fields[7].split(";")[i])
             else:
                 for info in args.info:
                     if info in info_fields:
-                        fields.append(fields[7].split(":")[info_fields.index(info)])
+                        fields.append(fields[7].split(";")[info_fields.index(info)])
             if args.json:
                 json_data.append(dict(zip(header, fields)))
             else:
