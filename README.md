@@ -13,16 +13,16 @@ The script can be run from the command line, and accepts the following arguments
 ## Examples
 
 To retain specified INFO fields DP and AD in the output TSV file, run the script as follows:  
-`python script.py --info DP AD`
+`python vcf2tsv.py --info DP AD`
 
 To retain all the INFO fields as separate columns in the output TSV file, run the script as follows:  
-`python script.py --all`
+`python vcf2tsv.py --all`
 
 To retain all the INFO fields as separate columns in the output .tsv.gz file, run the script as follows:  
-`python script.py --all --gz input.vcf.gz`
+`python vcf2tsv.py --all --gz input.vcf.gz`
 
 To retain all the INFO fields as separate columns in the output .json file, run the script as follows:  
-`python script.py --all --json input.vcf`
+`python vcf2tsv.py --all --json input.vcf`
 
 ## Note
 This script assumes that the input VCF file is well-formed and contains the specified INFO fields that are specified in the header.
