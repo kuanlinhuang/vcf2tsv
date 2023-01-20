@@ -4,6 +4,18 @@ import os
 import gzip
 import json
 
+# function
+def get_info_field_value(info_field, id):
+    fields = info_field.split(";")
+    for field in fields:
+        # check if the ID is in this line's info field
+        if id in field:
+            split_field = field.split(id+"=")
+            if len(split_field) > 1:
+                return split_field[1]
+    # put NA when the line don't have the info field names
+    return "NA"
+
 # create the parser
 parser = argparse.ArgumentParser(description='Convert VCF file to TSV, JSON and retain the specified INFO fields')
 # add the argument
@@ -99,15 +111,18 @@ if args.info or args.all:
                 
         # All other lines in the vcf
         else:
+            info_fields = fields[7]
             if args.all:
                 for i,info in enumerate(info_field_names):
-                    fields.insert(insert_position,fields[7].split(";")[i].split("=")[1])
+                    info_field_value = get_info_field_value(info_fields, info)
+                    fields.insert(insert_position,info_field_value)
                     insert_position = insert_position + 1
+                    
             else:
                 for info in args.info:
                     if info in info_field_names:
-                        fields.insert(insert_position,fields[7].split(";")[info_field_names.index(info)].split("=")[1])
-
+                        fields.insert(insert_position,info_field_value)
+                        
             if args.json:
                 json_data.append(dict(zip(header, fields)))
             else:
