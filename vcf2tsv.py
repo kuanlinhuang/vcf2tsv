@@ -65,37 +65,49 @@ else:
             raise ValueError("Error creating output file. Please check the output directory and its permissions") from e
     # Create a CSV writer
     tsv_writer = csv.writer(output_file, delimiter='\t')
+    
 header = ["CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO"]
 if args.info or args.all:
-    all_info_fields = set()
+    info_field_names = []
+    insert_position = 8 # default insert position for info field items: after the entire info field
     for line in lines:
+        # Get all the info field names
+        if line.startswith("##INFO"):
+            info_name = line.strip().split("<ID=")[1].split(",")[0]
+            info_field_names.append(info_name)
         # Skip lines that start with '##'
         if line.startswith("##"):
             continue
+        
         fields = line.strip().split("\t")
+        # Header line
         if line.startswith("#CHROM"):
             info_fields = fields[7]
             if args.all:
-                header.extend(info_fields)
+                header.extend(info_field_names)
             else:
                 for info in args.info:
-                    if info in info_fields:
+                    if info in info_field_names:
                         header.append(info)
-            format_fields = fields[8:]
-            header.extend(format_fields)
+            additional_fields = fields[8:]
+            header.extend(additional_fields)
             
             if args.json:
                 json_data.append(header)
             else:
                 tsv_writer.writerow(header)
+                
+        # All other lines in the vcf
         else:
             if args.all:
-                for i,info in enumerate(info_fields):
-                    fields.append(fields[7].split(";")[i])
+                for i,info in enumerate(info_field_names):
+                    fields.insert(insert_position,fields[7].split(";")[i].split("=")[1])
+                    insert_position = insert_position + 1
             else:
                 for info in args.info:
-                    if info in info_fields:
-                        fields.append(fields[7].split(";")[info_fields.index(info)])
+                    if info in info_field_names:
+                        fields.insert(insert_position,fields[7].split(";")[info_field_names.index(info)].split("=")[1])
+
             if args.json:
                 json_data.append(dict(zip(header, fields)))
             else:
