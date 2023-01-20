@@ -1,11 +1,10 @@
-# vcf2tsv
-## VCF to TSV Converter (Genomics)
+## VCF to TSV/JSON Converter (Genomics)
 
-This script converts a VCF file to a TSV file, and allows the user to retain specified or all the INFO fields as separate columns in the output TSV file. It also handle .vcf.gz and .tsv.gz formats.
+This script converts a VCF file to a TSV or a JSON file, and allows the user to retain specified or all the INFO fields as separate columns in the output TSV or JSON file. It also handle .gz formats.
 
 ## Usage
 The script can be run from the command line, and accepts the following arguments:  
-`-h, --help - Show the help message and exit`
+`-h, --help - Show the help message and exit`  
 `--info   Select specific info field to be retained as separate columns`  
 `--all    Retain all the INFO fields as separate columns`  
 `--gz     Output the file as gzip`
